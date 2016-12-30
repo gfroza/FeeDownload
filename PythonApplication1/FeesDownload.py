@@ -1,7 +1,11 @@
+##TO DO
+## Add counter so see when error
+## Add exception handler whole way through. if exception then generate CSV files as is
+
 import urllib.request as urlget
 import xml.etree.ElementTree
-import csv
 import pandas as pd
+import csv
 
 mstar_id = "./Fund"
 fund_code = "./TradingInformation/ExchangeListing/TradingExchange/TradingExchangeList/TradingSymbol"
@@ -13,15 +17,25 @@ tic = "./Operation/AnnualReport/FeeAndExpense/Investmentmangementcharges"
 #for mstar_code in root.findall(mstar_id):
    # print(mstar_code.tag)
 
-codes_pop = ['F000002COA','F00000W8CC','F00000W8CB','F00000W8C9','F00000W8C8','F00000W8BZ','F00000W8BX','F00000W8BW','F00000W3IM','F00000W3IF','F00000W8CA','F00000W3IL','F00000W2CU','F00000W2CT']
+#codes_pop = ['F000002COA','F00000W8CC','F00000W8CB','F00000W8C9','F00000W8C8','F00000W8BZ','F00000W8BX','F00000W8BW','F00000W3IM','F00000W3IF','F00000W8CA','F00000W3IL','F00000W2CU','F00000W2CT']
 
+with open('codes_for_fees.csv', 'r') as f:
+  reader = csv.reader(f)
+  the_list = list(reader)
+
+codes_pop  = [val for sublist in the_list for val in sublist]
+
+#print(codes_pop)
 my_list = []
-
-df = pd.DataFrame(columns=['code','ter','tc','tic'])
+failed_codes_list = []
 
 for code in codes_pop:
-    url = "http://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=Grindrod&Id=" + code + "&IDTYpe=FundShareClassId&Content=1&Currencies=BAS"
+    try:
+        url = "http://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=Grindrod&Id=" + code + "&IDTYpe=FundShareClassId&Content=1&Currencies=BAS"
     #print(url)
+    except Exception as str_error:
+        failed_codes_list.append(code)
+        pass
     s = urlget.urlopen(url)
     root = xml.etree.ElementTree.parse(s).getroot()
     #print(root)
@@ -43,23 +57,18 @@ for code in codes_pop:
         name = 'tic'
         value = tic_value.text
         my_dict.update({name: value})
-    print(my_dict)
-    mini_df = pd.DataFrame.from_dict(my_dict,orient='columns')
-    #mini_df = mini_df.transpose()
-    #print(mini_df)
-    df.append(mini_df)
-
-
-    #my_list.append(my_dict)
+    
+    my_list.append(my_dict)
 
 print("Looped through all funds")
 #print(my_list)
-print(df)
 
-#toCSV = my_list
-#keys = toCSV[0].keys()
-#with open('people.csv', 'w') as output_file:
-    #dict_writer = csv.DictWriter(output_file, keys)
-    #dict_writer.writeheader()
-    #dict_writer.writerows(toCSV)
+df = pd.DataFrame(my_list,columns=['code','ter','tc','tic'])
+ 
+#print(df)
+df.to_csv('fees.csv',',')
+
+myfile = open('failed.csv' 'wb')
+wr = csv.writer(myfile)
+wr.writerow(failed_codes_list)
 
