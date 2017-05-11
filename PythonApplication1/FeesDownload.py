@@ -36,7 +36,7 @@ for code in codes_pop:
     try:
         counter += 1
         print(counter)
-        #time.sleep(0.33)
+        time.sleep(1)
         url = "http://edw.morningstar.com/DataOutput.aspx?Package=EDW&ClientId=Grindrod&Id=" + code + "&IDTYpe=FundShareClassId&Content=1&Currencies=BAS"
         s = urlget.urlopen(url)
         #print(url)
